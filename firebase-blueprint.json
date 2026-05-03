@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "application": {
+      "title": "Lucky Draw Application",
+      "description": "User submission for a free lucky draw ticket",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the applicant" },
+        "email": { "type": "string", "format": "email", "description": "Email address for ticket delivery" },
+        "phone": { "type": "string", "description": "Contact number" },
+        "dob": { "type": "string", "format": "date", "description": "Date of birth for verification" },
+        "idFrontUrl": { "type": "string", "description": "Storage URL for ID card front" },
+        "idBackUrl": { "type": "string", "description": "Storage URL for ID card back" },
+        "selfieUrl": { "type": "string", "description": "Storage URL for user selfie" },
+        "status": { "type": "string", "enum": ["pending", "verified", "rejected"], "description": "Verification status" },
+        "ticketId": { "type": "string", "description": "Assigned ticket number" },
+        "userId": { "type": "string", "description": "The UID of the user who applied" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "phone", "dob", "status", "userId", "createdAt"]
+    },
+    "draw": {
+      "title": "Lucky Draw Event",
+      "description": "A scheduled lucky draw event with winning numbers",
+      "type": "object",
+      "properties": {
+        "drawNo": { "type": "string", "description": "Unique draw number" },
+        "drawDate": { "type": "string", "format": "date-time", "description": "When the draw happens" },
+        "winningNumbers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The drawn winning numbers"
+        },
+        "bonusNumber": { "type": "string", "description": "Optional bonus number" },
+        "status": { "type": "string", "enum": ["upcoming", "completed"] },
+        "poolAmount": { "type": "number" }
+      },
+      "required": ["drawNo", "drawDate", "status"]
+    },
+    "ticket": {
+      "title": "Lucky Draw Ticket",
+      "description": "Digital ticket issued to a verified user",
+      "type": "object",
+      "properties": {
+        "ticketNumber": { "type": "string" },
+        "drawNo": { "type": "string" },
+        "ownerEmail": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ticketNumber", "drawNo", "ownerUid", "createdAt"]
+    }
+  },
+  "firestore": {
+    "applications": {
+      "schema": "application",
+      "description": "Collection of user applications for verification"
+    },
+    "draws": {
+      "schema": "draw",
+      "description": "Collection of lucky draw events and results"
+    },
+    "tickets": {
+      "schema": "ticket",
+      "description": "Collection of issued digital tickets"
+    }
+  }
+}

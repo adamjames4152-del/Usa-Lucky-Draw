@@ -1,0 +1,58 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'jasonmorrison087@gmail.com';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Applications
+    match /applications/{applicationId} {
+      function isValidApplication(data) {
+        return data.keys().hasAll(['name', 'email', 'phone', 'dob', 'status', 'userId', 'createdAt'])
+          && data.name is string && data.name.size() <= 100
+          && data.email is string && data.email.size() <= 100
+          && data.phone is string && data.phone.size() <= 20
+          && data.dob is string && data.dob.size() <= 20
+          && data.status in ['pending', 'verified', 'rejected']
+          && (isSignedIn() ? data.userId == request.auth.uid : data.userId == 'guest')
+          && data.createdAt == request.time;
+      }
+
+      allow create: if isValidApplication(request.resource.data);
+      allow get, list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+    }
+
+    // Draws (Read-only for users, results are public)
+    match /draws/{drawId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Tickets
+    match /tickets/{ticketId} {
+      allow read: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      // Only system creates tickets (for demo purposes we'll allow client to create one upon "verification" simulation if needed, but ideally server does it)
+      // For this app, let's allow read for owners.
+    }
+  }
+}
